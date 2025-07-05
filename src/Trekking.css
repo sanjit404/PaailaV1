@@ -1,0 +1,59 @@
+/* Trekking.css */
+.trekking-container {
+  padding: 40px 20px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.trekking-container h2 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+}
+
+.trekking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.trekking-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trekking-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.trekking-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.trekking-card h3 {
+  padding: 15px;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.trekking-img-wrapper {
+  height: 180px;
+  overflow: hidden;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.trekking-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+

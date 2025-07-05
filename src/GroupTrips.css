@@ -1,0 +1,120 @@
+.group-trips {
+  padding: 2rem;
+  text-align: center;
+}
+
+.group-list {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.group-card {
+  width: 320px;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.group-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.member-list {
+  list-style-type: decimal;
+  padding-left: 1rem;
+  text-align: left;
+}
+
+.member-list li {
+  margin: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.member-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.leader-tag {
+  font-size: 0.85rem;
+  color: #2b7a0b;
+}
+
+.add-member-form input {
+  margin: 0.3rem 0.5rem 0.3rem 0;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.add-member-form button {
+  padding: 6px 10px;
+  border: none;
+  background-color: #1e90ff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.delete-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: red;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.create-group-form {
+  margin: 2rem auto;
+  padding: 1rem;
+  max-width: 500px;
+  background: #f2f2f2;
+  border-radius: 10px;
+}
+
+.create-group-form input {
+  display: block;
+  width: 100%;
+  margin: 0.5rem 0;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.create-group-form button {
+  padding: 8px 16px;
+  background-color: #28a745;
+  border: none;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+.delete-group-btn {
+  background-color: crimson;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  float: right;
+  margin-top: -25px;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.delete-group-btn:hover {
+  background-color: darkred;
+}
