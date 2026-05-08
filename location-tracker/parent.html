@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Track Child</title>
+  <link rel="icon" href="../location-tracker/lgo.svg">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    #map { height: 500px; min-width: 500px; }
+    #status { margin-bottom: 10px; color: red; }
+    #lastUpdate { font-weight: bold; margin-top: 5px; }
+    #lastUpdate.stale { color: gray; }
+    #clock {
+      max-width: 100px;
+      background: linear-gradient(to right, #db7806, #b50303);
+      color: white;
+      padding: 2px;
+      font-size: 12px;
+      text-align: center;
+      border-radius: 8px;
+    }
+    #lastUpdate {
+      max-width: 500px;
+      background: linear-gradient(to right, #fdddb8, #f39e9e);
+      color: white;
+      padding: 2px;
+      font-size: 18px;
+      text-align: center;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Child's Live Location</h2>
+  <p id="clock"></p>
+  <p style="color: red; font-size: small; background-color: rgba(235, 231, 231, 0.814);
+    max-width: fit-content;">Warning: This page is accessing someone's location.</p>
+
+  <div id="status">⏳ Waiting for child location...</div>
+  <div id="map"></div>
+  <div id="lastUpdate"></div>
+  <a href="link_children.php">Link Child</a> |
+  <a href="logout.php">Logout</a>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    let map = null;
+    let marker = null;
+
+    // Maximum allowed age in milliseconds (1 minute)
+    const MAX_AGE = 1 * 60 * 1000; 
+
+    function loadMap() {
+      fetch("get_child_location.php")
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("status").innerText = "⚠️ " + data.error;
+            return;
+          }
+          const lat = parseFloat(data.latitude);
+          const lng = parseFloat(data.longitude);
+          const updatedAtStr = data.location_updated_at;
+          const childName = data.child_name || "Child";
+
+
+          let updatedAt = updatedAtStr ? new Date(updatedAtStr.replace(' ', 'T')) : null;
+          if (updatedAt && isNaN(updatedAt.getTime())) {
+            updatedAt = new Date(updatedAtStr); // fallback
+          }
+
+          const now = new Date();
+
+          if (isNaN(lat) || isNaN(lng)) {
+            document.getElementById("status").innerText = "⚠️ No valid location received";
+            return;
+          }
+
+          const lastUpdateDiv = document.getElementById("lastUpdate");
+
+          if (updatedAt) {
+            const ageMs = now - updatedAt;
+
+            if (ageMs <= 10000) { // under 10 seconds
+              document.getElementById("status").innerText = childName + " is online";
+              document.getElementById("status").style.color = "green";
+              lastUpdateDiv.classList.remove("stale");
+              if (marker) marker.setOpacity(1);
+            } else if (ageMs <= MAX_AGE) { // between 10s and 1min
+              document.getElementById("status").innerText = childName + " was online < 1 min ago";
+              document.getElementById("status").style.color = "orange";
+              lastUpdateDiv.classList.remove("stale");
+              if (marker) marker.setOpacity(1);
+            } else { // older than 5 min
+              lastUpdateDiv.classList.add("stale");
+              const minutes = Math.floor(ageMs / 60000);
+              let timeAgoText;
+
+              if (minutes < 60) {
+                timeAgoText = `${childName} was online ${minutes} min ago`;
+              } else {
+                const hours = Math.floor(minutes / 60);
+                const min = minutes % 60;
+                if (hours < 24) {
+                  timeAgoText = `${childName} was online ${hours} hour${hours > 1 ? 's' : ''} ${min} min ago`;
+                } else {
+                  const days = Math.floor(hours / 24);
+                  const hor = hours % 24;
+                  if (hor > 0) {
+                    timeAgoText = `${childName} was online ${days} day${days > 1 ? 's' : ''} ${hor} hour${hor > 1 ? 's' : ''} ago`;
+                  } else {
+                    timeAgoText = `${childName} was online ${days} day${days > 1 ? 's' : ''} ago`;
+                  }
+                }
+              }
+
+              document.getElementById("status").innerText = timeAgoText;
+              document.getElementById("status").style.color = "red";
+              if (marker) marker.setOpacity(0.5);
+            }
+          } else {
+            lastUpdateDiv.innerText = "";
+            document.getElementById("status").innerText = "Waiting for child location...";
+            document.getElementById("status").style.color = "black";
+            if (marker) marker.setOpacity(0.5);
+          }
+
+          if (!map) {
+            map = L.map('map').setView([lat, lng], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            marker = L.marker([lat, lng]).addTo(map).bindPopup(childName).openPopup();
+          } else {
+            marker.setLatLng([lat, lng]);
+            map.panTo([lat, lng]);
+          }
+
+          // Reverse geocoding to get address
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(locationData => {
+              if (locationData && locationData.address) {
+                const addr = locationData.address;
+                const shortLocation = [
+                  addr.suburb || addr.neighbourhood || addr.road || '',
+                  addr.city || addr.town || addr.village || '',
+                  addr.state || '',
+                  addr.country || ''
+                ].filter(Boolean).join(', ');
+
+                marker.setPopupContent(`<b>${childName}</b><br>${shortLocation}`).openPopup();
+                lastUpdateDiv.innerHTML = `Last updated: ${updatedAt ? updatedAt.toLocaleString() : "Unknown"} <br> Last location: ${shortLocation}`;
+              } else {
+                marker.setPopupContent(`<b>${childName}</b><br>Location not found`).openPopup();
+              }
+            })
+            .catch(err => {
+              console.warn("Reverse geocoding failed:", err);
+              marker.setPopupContent(`<b>${childName}</b><br>Unable to get location name`).openPopup();
+            });
+
+        })
+        .catch(err => {
+          document.getElementById("status").innerText = "No Connection..... Failed to fetch the location.";
+          console.error(err);
+        });
+    }
+
+    loadMap();
+    setInterval(loadMap, 10000);
+
+    function time() {
+      const d = new Date();
+      let h = d.getHours();
+      const m = d.getMinutes().toString().padStart(2, '0');
+      const s = d.getSeconds().toString().padStart(2, '0');
+      const da = d.getDay();
+
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const name = days[da];
+
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12; 
+
+      document.getElementById('clock').innerHTML = `Nepal <br> ${h}:${m}:${s} ${ampm} <br> ${name}`;
+    }
+
+    setInterval(time, 1000);
+  </script>
+</body>
+</html>
